@@ -89,5 +89,43 @@ SMODS.Back{
 	end
 }
 
+SMODS.Back{
+	name = "Certified Deck",
+	key = "pg_certified",
+	atlas = "posneg_backs",
+	pos = {x = 4, y = 5},
+	loc_txt = {
+		name = "Certified Deck",
+		text = {
+			"After defeating each",
+			"{C:attention}Boss Blind{}, add a",
+			"random {C:attention}seal{} to a",
+			"random {C:attention}playing card{}",
+		},
+	},
+	calculate = function(self, back, context)
+		if context.context == "eval" and G.GAME.last_blind and G.GAME.last_blind.boss then
+			G.E_MANAGER:add_event(Event({
+				func = function()
+					local eligible_seal_cards = {}
+					for k, v in ipairs(G.deck.cards) do
+						if v.seal == nil then
+							table.insert(eligible_seal_cards, v)
+						end
+					end
+					local eligible_card = pseudorandom_element(eligible_seal_cards, pseudoseed("certback"))
+					local seal_type = pseudorandom(pseudoseed("certseal"))
+					if seal_type > 0.75 then eligible_card:set_seal('Red', true)
+					elseif seal_type > 0.5 then eligible_card:set_seal('Blue', true)
+					elseif seal_type > 0.25 then eligible_card:set_seal('Gold', true)
+					else eligible_card:set_seal('Purple', true)
+					end
+					return true
+				end
+			}))
+		end
+	end
+}
+
 ----------------------------------------------
 ------------MOD CODE END----------------------
