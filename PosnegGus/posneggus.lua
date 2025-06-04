@@ -100,25 +100,36 @@ SMODS.Back{
 			"After defeating each",
 			"{C:attention}Boss Blind{}, add a",
 			"random {C:attention}seal{} to a",
-			"random {C:attention}playing card{}",
+			"random {C:attention}card{} in hand",
 		},
 	},
 	calculate = function(self, back, context)
-		if context.context == "eval" and G.GAME.last_blind and G.GAME.last_blind.boss then
+		if context.setting_blind then
+			self.seal_added = false
+		end
+
+		if context.end_of_round and context.cardarea == G.hand and G.GAME.blind and G.GAME.blind.boss then
 			G.E_MANAGER:add_event(Event({
 				func = function()
-					local eligible_seal_cards = {}
-					for k, v in ipairs(G.deck.cards) do
-						if v.seal == nil then
-							table.insert(eligible_seal_cards, v)
+					if not self.seal_added then
+						local eligible_seal_cards = {}
+						for k, v in ipairs(G.hand.cards) do
+							if v.seal == nil then
+								table.insert(eligible_seal_cards, v)
+							end
 						end
-					end
-					local eligible_card = pseudorandom_element(eligible_seal_cards, pseudoseed("certback"))
-					local seal_type = pseudorandom(pseudoseed("certseal"))
-					if seal_type > 0.75 then eligible_card:set_seal('Red', true)
-					elseif seal_type > 0.5 then eligible_card:set_seal('Blue', true)
-					elseif seal_type > 0.25 then eligible_card:set_seal('Gold', true)
-					else eligible_card:set_seal('Purple', true)
+						local eligible_card = pseudorandom_element(eligible_seal_cards, pseudoseed("certback"))
+						if eligible_card ~= nil then
+							local seal_type = pseudorandom(pseudoseed("certseal"))
+							if seal_type > 0.75 then eligible_card:set_seal('Red', true)
+							elseif seal_type > 0.5 then eligible_card:set_seal('Blue', true)
+							elseif seal_type > 0.25 then eligible_card:set_seal('Gold', true)
+							else eligible_card:set_seal('Purple', true)
+							end
+						end
+						self.seal_added = true
+						play_sound('tarot1')
+						eligible_card:juice_up(0.2, 0.3)
 					end
 					return true
 				end
